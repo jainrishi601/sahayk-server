@@ -34,7 +34,7 @@
                 return;
             }
 
-            var socket = io.connect('http://localhost:5000');
+            var socket = io.connect('https://sahayk-server.onrender.com');
 
             socket.on('connect', function() {
                 socket.emit('join-message', room);
