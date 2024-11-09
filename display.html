@@ -7,6 +7,7 @@
         body {
             background: linear-gradient(45deg, #7b0909, #6771b8b8);
             text-align: center;
+            color: white;
         }
         img {
             width: 90%;
@@ -19,27 +20,26 @@
 </head>
 <body>
 
-    <h1 style="color:white; margin-top: 20px;">Welcome to Codeboard Screencast Viewer</h1>
-    <img id="screenImage" alt="Screen share not available"/>
+    <h1 style="margin-top: 20px;">Welcome to Codeboard Screencast Viewer</h1>
+    <img id="screenImage" alt="Screen share not available" src="default.png"/>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js" crossorigin="anonymous"></script>
     <script>
         window.onload = function() {
-            // Prompt user for room ID
-            var room = prompt("Please enter room ID: ");
-            if (!room.trim()) {
-                document.body.innerHTML = "<h1 style='color: red;'>Room ID is mandatory to join!</h1>";
+            var room = prompt("Please enter room ID: ").trim();
+            if (!room) {
+                alert("Room ID is mandatory to join!");
+                location.reload();
                 return;
             }
 
-            // Connect to the server
             var socket = io.connect('http://localhost:5000');
 
-            // Join the specified room
-            socket.emit('join-message', room);
+            socket.on('connect', function() {
+                socket.emit('join-message', room);
+            });
 
-            // Listen for screen data from the server
             socket.on('screen-data', function(message) {
                 if (message) {
                     $("img#screenImage").attr("src", "data:image/png;base64," + message);
@@ -48,10 +48,9 @@
                 }
             });
 
-            // Handle socket connection errors
             socket.on('connect_error', function(error) {
                 console.error('Connection Error: ', error);
-                document.body.innerHTML = "<h1 style='color: red;'>Unable to connect to the server. Please try again later.</h1>";
+                $("h1").text("Unable to connect to the server. Please try again later.").css("color", "red");
             });
         };
     </script>

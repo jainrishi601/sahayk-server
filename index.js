@@ -2,11 +2,21 @@
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
+const cors = require('cors');  // Add CORS support if needed
+
 const app = express();
+
+// Middleware for CORS
+app.use(cors());  // Allow all origins; configure as needed
 
 // Create server and attach socket.io
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = socketIo(server, {
+    cors: {
+        origin: '*',  // Replace '*' with the specific URL if you know it
+        methods: ['GET', 'POST']
+    }
+});
 
 // Serve the viewer page (display.html)
 app.get('/view', (req, res) => {
@@ -30,15 +40,15 @@ io.on('connection', (socket) => {
     // Handle receiving screen data
     socket.on('screen-data', (data) => {
         try {
-            data = JSON.parse(data); // Parse the incoming data
-            const room = data.room;
-            const imgStr = data.image;
+            const { room, image } = JSON.parse(data);  // Destructure room and image data
+            if (!room || !image) throw new Error("Incomplete data received");
 
             // Broadcast screen data to all clients in the room
-            socket.broadcast.to(room).emit('screen-data', imgStr);
+            socket.to(room).emit('screen-data', image);
             console.log(`Broadcasting screen data to room: ${room}`);
         } catch (error) {
             console.error('Error parsing screen data:', error);
+            socket.emit('error-message', 'Invalid screen data format');
         }
     });
 
